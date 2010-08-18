@@ -1,0 +1,60 @@
+<?php
+
+/**
+* @file
+* Implementation of hook_install().
+*/
+function timetracker_install() {
+  drupal_install_schema('timetracker');
+}
+
+/**
+* Implementation of hook_uninstall().
+*/
+function timetracker_uninstall() {
+  drupal_uninstall_schema('timetracker');
+}
+
+/**
+* Implementation of hook_schema().
+*/
+function timetracker_schema() {
+  $schema = array();
+  $schema['timetracker'] = array(
+    'fields' => array(
+      'tid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'value' => array(
+        'type' => 'float',
+        'not null' => TRUE,
+        'unsigned' => FALSE,
+      ),
+      'note' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+    ),
+    'primary key' => array('tid'),
+  );
+
+  return $schema;
+}
+
