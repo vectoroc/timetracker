@@ -178,6 +178,8 @@ function timetracker_table_submit($form, &$form_state) {
 }
 
 function theme_timetracker_table($form) {
+  _timetracker_include_resources();
+  
   $header = array(t('Date'), t('User'), t('Hours'), t('Note'));
   $rows = array();
   foreach (element_children($form['items']) as $index) {
@@ -244,4 +246,8 @@ SQL;
   }
   
   return $users;
+}
+
+function _timetracker_include_resources() {
+  drupal_add_css(drupal_get_path('module', 'timetracker') .'/timetracker.css');
 }
