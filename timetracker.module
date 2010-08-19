@@ -6,17 +6,17 @@ function timetracker_menu() {
     'file' => 'timetracker.admin.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('timetracker_admin_settings'),
-    'access arguments' => array('administer timetracker'),
+    'access arguments' => array('access administration pages'),
   );
   
-  $menu['timetracker/add/js'] = array(
-  );
+//  $menu['timetracker/add/js'] = array(
+//  );
   
   return $menu;
 }
 
 function timetracker_perm() {
-  return array('view timetracker', 'edit timetracker', 'administer timetracker');
+  return array('view any timetracker', 'view own timetracker', 'edit timetracker');
 }
 
 function timetracker_theme() {
@@ -37,12 +37,14 @@ function timetracker_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   }
   
   if ($op == 'view' && !$teaser) {
-    $node->content['timetracker'] = array(
-      '#type' => 'item',
-      '#title' => t('Time Tracking'),
-      '#value' => drupal_get_form('timetracker_table', $node),
-      '#weight' => 10,
-    );
+    if (user_access('view any timetracker') || user_access('view own timetracker')) {
+      $node->content['timetracker'] = array(
+        '#type' => 'item',
+        '#title' => t('Time Tracking'),
+        '#value' => drupal_get_form('timetracker_table', $node),
+        '#weight' => 10,
+      );
+    }
   }
   elseif ($op == 'load') {
     $res = db_query('SELECT tt.*, u.name as user_name FROM {timetracker} tt LEFT JOIN {users} u USING(uid) WHERE nid = %d', $node->nid);
@@ -85,6 +87,7 @@ function timetracker_table(&$form_state, $node) {
   $form['new_item'] = array(
     '#type' => 'fieldset',
     '#tree' => TRUE,
+    '#access' => user_access('edit timetracker'),
   );
   
   $form['new_item']['timestamp'] = array(
@@ -97,10 +100,17 @@ function timetracker_table(&$form_state, $node) {
     $form['new_item']['timestamp']['#default_value'] = gmdate('Y-m-d H:i:s', time());
   }
   
+  if (!user_access('view any timetracker')) {
+    $users_list[$user->uid] = $user->name;
+  }
+  else {
+    $users_list = _timetracker_users();
+  }
+  
   $form['new_item']['uid'] = array(
     '#type' => 'select',  
     '#title' => $titles['uid'],
-    '#options' => _timetracker_users(),
+    '#options' => $users_list,
     '#default' => $user->uid, 
   );
   
@@ -134,6 +144,10 @@ function timetracker_table(&$form_state, $node) {
   $total = 0;
   
   foreach((array)$node->timetracker as $tid => $item) {
+    if (!user_access('view any timetracker') && $item['uid'] != $user->uid) {
+      continue;
+    }
+    
     $total += $item['value'];
     
     foreach ($item as $key => $value) {
@@ -232,12 +246,14 @@ function theme_timetracker_table($form) {
     'class' => 'total',
   );
   
-  $rows[] = array(
-    drupal_render($form['new_item']['timestamp']),
-    drupal_render($form['new_item']['uid']),
-    drupal_render($form['new_item']['value']),
-    drupal_render($form['new_item']['note']) .' '. drupal_render($form['new_item']['add']),
-  );
+  if (user_access('edit timetracker')) {
+    $rows[] = array(
+      drupal_render($form['new_item']['timestamp']),
+      drupal_render($form['new_item']['uid']),
+      drupal_render($form['new_item']['value']),
+      drupal_render($form['new_item']['note']) .' '. drupal_render($form['new_item']['add']),
+    );
+  }
   
   drupal_render($form['total']);
   drupal_render($form['new_item']);
@@ -247,22 +263,38 @@ function theme_timetracker_table($form) {
 }
 
 function _timetracker_users() {
-  $rids = array_keys(user_roles(FALSE, 'edit timetracker') + user_roles(FALSE, 'administer timetracker'));
-  $placeholders = db_placeholders($rids);
-  $query = <<<SQL
-    SELECT u.uid, u.name 
-      FROM {users} u 
-    LEFT JOIN {users_roles} ur 
-         USING (uid) 
-    WHERE u.uid = 1 
-      OR  (u.status <> 0 AND ur.rid IN ($placeholders))
+  $users = array();
+  
+  $result = db_query("SELECT name FROM {users} WHERE uid = 1 AND status <> 0");
+  if ($result && ($admin_name = db_result($result))) {
+    $users[1] = $admin_name;
+  }
+  
+  $rids = array_keys(user_roles(FALSE, 'edit timetracker'));
+  
+  $result = NULL;
+  if (in_array(DRUPAL_AUTHENTICATED_RID, $rids)) {
+    $result = db_query("SELECT uid, name FROM {users} WHERE uid > 1 AND status <> 0");
+  }
+  elseif (count($rids)) {
+    $placeholders = db_placeholders($rids);
+    $query = <<<SQL
+      SELECT u.uid, u.name 
+        FROM {users} u 
+      LEFT JOIN {users_roles} ur 
+           USING (uid) 
+      WHERE u.uid > 1
+        AND u.status <> 0 
+        AND ur.rid IN ($placeholders)
 SQL;
 
-  $result = db_query($query, $rids);
-  $users = array();
-
-  while($row = db_fetch_object($result)) {
-    $users[$row->uid] = $row->name;
+    $result = db_query($query, $rids);  
+  }
+  
+  if ($result) {
+    while($row = db_fetch_object($result)) {
+      $users[$row->uid] = $row->name;
+    }    
   }
   
   return $users;
