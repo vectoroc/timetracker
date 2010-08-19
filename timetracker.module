@@ -77,10 +77,14 @@ function timetracker_table(&$form_state, $node) {
   );
   
   $form['new_item']['timestamp'] = array(
-    '#type' => 'textfield',  
+    '#type' => 'date',  
     '#title' => $titles['timestamp'],
-    '#default_value' => time(),
   );
+  
+  if (module_exists('date_popup')) {
+    $form['new_item']['timestamp']['#type'] = 'date_popup';
+    $form['new_item']['timestamp']['#default_value'] = gmdate('Y-m-d H:i:s', time());
+  }
   
   $form['new_item']['uid'] = array(
     '#type' => 'select',  
@@ -135,7 +139,7 @@ function timetracker_table(&$form_state, $node) {
       '#value' => $item['user_name'],
     );
     
-    $form['items'][$tid]['timestamp']['#value'] = format_date($item['timestamp']);
+    $form['items'][$tid]['timestamp']['#value'] = gmdate('M j, Y', $item['timestamp']);
   } 
   
   $form['total'] = array(
@@ -143,19 +147,33 @@ function timetracker_table(&$form_state, $node) {
     '#title' => t('Total'),
     '#value' => $total,
   );
- 
-  
-//  $form['data'] = array(
-//    '#type' => 'item',
-//    '#title' => 'Test TimeTracker',
-//    '#value' => $node->title,
-//  );
-
+   
   return $form;
 }
 
+function timetracker_table_validate($form, &$form_state) {
+  if (!is_numeric($form_state['values']['new_item']['value'])) {
+    form_error($form['new_item']['value'], t('Hours must be a numeric value'));
+  }  
+}
+
+
 function timetracker_table_submit($form, &$form_state) {
   $record = $form_state['values']['new_item'];
+  
+  if (module_exists('date_popup')) {
+    $record['timestamp'] = date_convert(
+      $form_state['values']['new_item']['timestamp'], 
+      DATE_DATETIME, 
+      DATE_UNIX,
+      $form['new_item']['timestamp']['#date_timezone']
+    );    
+  }
+  else {
+    $date = $form_state['values']['new_item']['timestamp'];
+    $record['timestamp'] = gmmktime(0, 0, 0, $date['month'], $date['day'], $date['year']);
+  }
+  
   drupal_write_record('timetracker', $record);
 }
 
