@@ -56,6 +56,17 @@ function timetracker_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   }
 }
 
+/**
+ * Implementation of hook_views_api().
+ */
+function timetracker_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'timetracker'),
+  );
+}
+
+
 function timetracker_table(&$form_state, $node) {
   global $user;
   
