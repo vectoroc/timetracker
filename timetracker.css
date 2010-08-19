@@ -4,3 +4,18 @@
   color: #666;
   font-weight: bold;
 }
+
+.timetracker .field-timestamp {
+  width : 17em;
+}
+.timetracker .field-uid { 
+  width : 10em;
+}
+.timetracker .field-value { 
+  width : 8em;
+}
+
+#edit-new-item-add {
+  float: right;
+  clear: right;
+}

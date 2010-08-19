@@ -97,6 +97,8 @@ function timetracker_table(&$form_state, $node) {
     '#type' => 'textfield',  
     '#title' => $titles['value'],
     '#required' => TRUE,
+    '#size' => 5,
+    '#maxlength' => 5,
   );
   
   $form['new_item']['note'] = array(
@@ -180,7 +182,14 @@ function timetracker_table_submit($form, &$form_state) {
 function theme_timetracker_table($form) {
   _timetracker_include_resources();
   
-  $header = array(t('Date'), t('User'), t('Hours'), t('Note'));
+  $header = array();
+  foreach (array('timestamp', 'uid', 'value', 'note') as $i => $field) {
+    $header[] = array(
+      'data' => $form['new_item'][$field]['#title'], 
+      'class' => "field-$field",
+    );
+  }
+  
   $rows = array();
   foreach (element_children($form['items']) as $index) {
     $row = array();    
