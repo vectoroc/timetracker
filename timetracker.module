@@ -37,6 +37,13 @@ function timetracker_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   }
   
   if ($op == 'view' && !$teaser) {
+    // TODO: refactor this
+    if (module_exists('spaces') && module_exists('timetracker_feature')) {
+      if (!spaces_access_feature('view', 'timetracker_feature')) {
+        return;
+      }
+    }
+    
     if (user_access('view any timetracker') || user_access('view own timetracker')) {
       $node->content['timetracker'] = array(
         '#type' => 'item',
