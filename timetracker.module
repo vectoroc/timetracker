@@ -36,7 +36,7 @@ function timetracker_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     return;
   }
   
-  if ($op == 'view' && !$teaser) {
+  if ($op == 'view' && isset($node->nid) && !$teaser && $page) {
     // TODO: refactor this
     if (module_exists('spaces') && module_exists('timetracker_feature')) {
       if (!spaces_access_feature('view', 'timetracker_feature')) {
