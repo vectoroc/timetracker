@@ -10,6 +10,15 @@ function timetracker_feature_ctools_plugin_api() {
 }
 
 /**
+ * Implementation of hook_menu_default_items().
+ */
+function timetracker_feature_menu_default_items() {
+  module_load_include('inc', 'timetracker_feature', 'timetracker_feature.defaults');
+  $args = func_get_args();
+  return call_user_func_array('_timetracker_feature_menu_default_items', $args);
+}
+
+/**
  * Implementation of hook_user_default_permissions().
  */
 function timetracker_feature_user_default_permissions() {

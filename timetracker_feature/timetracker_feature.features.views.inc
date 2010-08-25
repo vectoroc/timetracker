@@ -9,8 +9,8 @@ function _timetracker_feature_views_default_views() {
   // Exported view: timetracker
   $view = new view;
   $view->name = 'timetracker';
-  $view->description = '';
-  $view->tag = '';
+  $view->description = 'TimeTracker';
+  $view->tag = 'timetracker';
   $view->view_php = '';
   $view->base_table = 'timetracker';
   $view->is_cacheable = FALSE;
@@ -18,20 +18,20 @@ function _timetracker_feature_views_default_views() {
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('relationships', array(
-    'uid' => array(
-      'label' => 'Time tracking user',
-      'required' => 1,
-      'id' => 'uid',
-      'table' => 'timetracker',
-      'field' => 'uid',
-      'relationship' => 'none',
-    ),
     'nid' => array(
       'label' => 'Node',
       'required' => 1,
       'id' => 'nid',
       'table' => 'timetracker',
       'field' => 'nid',
+      'relationship' => 'none',
+    ),
+    'uid' => array(
+      'label' => 'User',
+      'required' => 1,
+      'id' => 'uid',
+      'table' => 'timetracker',
+      'field' => 'uid',
       'relationship' => 'none',
     ),
   ));
@@ -66,6 +66,38 @@ function _timetracker_feature_views_default_views() {
       'field' => 'title',
       'relationship' => 'nid',
     ),
+    'name' => array(
+      'label' => 'User',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'link_to_user' => 1,
+      'overwrite_anonymous' => 0,
+      'anonymous_text' => '',
+      'exclude' => 0,
+      'id' => 'name',
+      'table' => 'users',
+      'field' => 'name',
+      'relationship' => 'uid',
+    ),
     'timestamp' => array(
       'label' => 'Activity date',
       'alter' => array(
@@ -96,38 +128,6 @@ function _timetracker_feature_views_default_views() {
       'table' => 'timetracker',
       'field' => 'timestamp',
       'relationship' => 'none',
-    ),
-    'name' => array(
-      'label' => 'Name',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'link_class' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'target' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'html' => 0,
-        'strip_tags' => 0,
-      ),
-      'empty' => '',
-      'hide_empty' => 0,
-      'empty_zero' => 0,
-      'link_to_user' => 1,
-      'overwrite_anonymous' => 0,
-      'anonymous_text' => '',
-      'exclude' => 0,
-      'id' => 'name',
-      'table' => 'users',
-      'field' => 'name',
-      'relationship' => 'uid',
     ),
     'value' => array(
       'label' => 'Hours',
@@ -194,12 +194,59 @@ function _timetracker_feature_views_default_views() {
       'relationship' => 'none',
     ),
   ));
+  $handler->override_option('filters', array(
+    'uid' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_op',
+        'identifier' => 'uid',
+        'label' => 'User: Name',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid',
+      'table' => 'users',
+      'field' => 'uid',
+      'relationship' => 'nid',
+    ),
+    'timestamp' => array(
+      'operator' => 'between',
+      'value' => array(
+        'type' => 'date',
+        'value' => '',
+        'min' => '',
+        'max' => '',
+      ),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'timestamp_op',
+        'identifier' => 'timestamp',
+        'label' => 'Time tracking: Activity date',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'timestamp',
+      'table' => 'timetracker',
+      'field' => 'timestamp',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'atrium_feature',
+    'spaces_feature' => '0',
+    'perm' => 'view any timetracker',
   ));
   $handler->override_option('cache', array(
     'type' => 'none',
   ));
+  $handler->override_option('title', 'Time Tracker');
   $handler->override_option('items_per_page', 0);
   $handler->override_option('style_plugin', 'table');
   $handler->override_option('style_options', array(
@@ -227,14 +274,75 @@ function _timetracker_feature_views_default_views() {
     ),
     'default' => '-1',
   ));
-  $handler = $view->new_display('page', 'TimeTracker', 'page_1');
+  $handler = $view->new_display('page', 'TimeTracker', 'page_4');
+  $handler->override_option('arguments', array(
+    'group_nid' => array(
+      'default_action' => 'default',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'breadcrumb' => '',
+      'default_argument_type' => 'og_group_node',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'group_nid',
+      'table' => 'og_ancestry',
+      'field' => 'group_nid',
+      'relationship' => 'nid',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(
+        '2' => 0,
+        '3' => 0,
+        '4' => 0,
+      ),
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'default_options_div_prefix' => '',
+      'default_argument_fixed' => '',
+      'default_argument_user' => 0,
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'blog' => 0,
+        'book' => 0,
+        'event' => 0,
+        'feed_ical' => 0,
+        'feed_ical_item' => 0,
+        'group' => 0,
+        'profile' => 0,
+        'shoutbox' => 0,
+        'casetracker_basic_case' => 0,
+        'casetracker_basic_project' => 0,
+        'feed' => 0,
+        'testtype' => 0,
+      ),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(
+        '1' => 0,
+      ),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+      'validate_argument_is_member' => 'OG_VIEWS_DO_NOT_VALIDATE_MEMBERSHIP',
+      'validate_argument_group_node_type' => array(
+        'group' => 0,
+      ),
+      'validate_argument_php' => '',
+    ),
+  ));
   $handler->override_option('path', 'timetracker');
   $handler->override_option('menu', array(
-    'type' => 'none',
-    'title' => '',
+    'type' => 'normal',
+    'title' => 'Time Tracker',
     'description' => '',
-    'weight' => 0,
-    'name' => 'navigation',
+    'weight' => '0',
+    'name' => 'features',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
@@ -243,7 +351,134 @@ function _timetracker_feature_views_default_views() {
     'weight' => 0,
     'name' => 'navigation',
   ));
-  $handler = $view->new_display('page', 'TimeTracker by user', 'page_2');
+  $handler = $view->new_display('page', 'User\'s TimeTracker', 'page_1');
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => 'Case',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'link_to_node' => 1,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'nid',
+    ),
+    'timestamp' => array(
+      'label' => 'Activity date',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'date_format' => 'small',
+      'custom_date_format' => '',
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'timetracker',
+      'field' => 'timestamp',
+      'relationship' => 'none',
+    ),
+    'value' => array(
+      'label' => 'Hours',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'set_precision' => FALSE,
+      'precision' => 0,
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'exclude' => 0,
+      'id' => 'value',
+      'table' => 'timetracker',
+      'field' => 'value',
+      'relationship' => 'none',
+    ),
+    'note' => array(
+      'label' => 'Note',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'exclude' => 0,
+      'id' => 'note',
+      'table' => 'timetracker',
+      'field' => 'note',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('arguments', array(
     'uid' => array(
       'default_action' => 'empty',
@@ -269,6 +504,9 @@ function _timetracker_feature_views_default_views() {
         '3' => 0,
         '4' => 0,
       ),
+      'override' => array(
+        'button' => 'Use default',
+      ),
       'default_options_div_prefix' => '',
       'default_argument_fixed' => '',
       'default_argument_user' => 0,
@@ -285,6 +523,7 @@ function _timetracker_feature_views_default_views() {
         'casetracker_basic_case' => 0,
         'casetracker_basic_project' => 0,
         'feed' => 0,
+        'testtype' => 0,
       ),
       'validate_argument_node_access' => 0,
       'validate_argument_nid_type' => 'nid',
@@ -299,12 +538,61 @@ function _timetracker_feature_views_default_views() {
         'group' => 0,
       ),
       'validate_argument_php' => '',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'timestamp' => array(
+      'operator' => '=',
+      'value' => array(
+        'type' => 'date',
+        'value' => '',
+        'min' => '',
+        'max' => '',
+      ),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'timestamp_op',
+        'identifier' => 'timestamp',
+        'label' => 'Time tracking: Activity date',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'timestamp',
+      'table' => 'timetracker',
+      'field' => 'timestamp',
       'override' => array(
         'button' => 'Use default',
       ),
+      'relationship' => 'none',
     ),
   ));
+  $handler->override_option('access', array(
+    'type' => 'perm',
+    'perm' => 'view own timetracker',
+  ));
   $handler->override_option('path', 'user/%/timetracker');
+  $handler->override_option('menu', array(
+    'type' => 'tab',
+    'title' => 'Time Tracker',
+    'description' => '',
+    'weight' => '0',
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler = $view->new_display('page', 'Full TimeTracker', 'page_2');
+  $handler->override_option('access', array(
+    'type' => 'perm',
+    'perm' => 'view any timetracker',
+  ));
+  $handler->override_option('path', 'timetracker_all');
   $handler->override_option('menu', array(
     'type' => 'none',
     'title' => '',
@@ -321,8 +609,10 @@ function _timetracker_feature_views_default_views() {
   ));
   $translatables['timetracker'] = array(
     t('Defaults'),
+    t('Full TimeTracker'),
+    t('Time Tracker'),
     t('TimeTracker'),
-    t('TimeTracker by user'),
+    t('User\'s TimeTracker'),
   );
 
   $views[$view->name] = $view;

@@ -1,3 +1,10 @@
 <?php
 
 include_once('timetracker_feature.features.inc');
+
+/**
+* Implementation of hook_init().
+*/
+function timetracker_feature_init() {
+  drupal_add_css(drupal_get_path('module', 'timetracker_feature') .'/timetracker_feature.css');
+}

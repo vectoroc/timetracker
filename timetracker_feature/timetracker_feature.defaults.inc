@@ -13,6 +13,26 @@ function _timetracker_feature_ctools_plugin_api() {
 }
 
 /**
+ * Helper to implementation of hook_menu_default_items().
+ */
+function _timetracker_feature_menu_default_items() {
+  $items = array();
+
+  $items[] = array(
+    'title' => 'Time Tracker',
+    'path' => 'timetracker',
+    'weight' => '0',
+  );
+  // Translatables
+  array(
+    t('Time Tracker'),
+  );
+
+
+  return $items;
+}
+
+/**
  * Helper to implementation of hook_user_default_permissions().
  */
 function _timetracker_feature_user_default_permissions() {
