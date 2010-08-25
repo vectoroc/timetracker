@@ -15,7 +15,8 @@
   width : 8em;
 }
 
-#edit-new-item-add {
-  float: right;
-  clear: right;
+.timetracker .field-operations {
+  width : 5em;
+  vertical-align: middle;
+  text-align: center;
 }

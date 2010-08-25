@@ -16,7 +16,7 @@ function timetracker_menu() {
 }
 
 function timetracker_perm() {
-  return array('view any timetracker', 'view own timetracker', 'edit timetracker');
+  return array('view any timetracker', 'view own timetracker', 'edit timetracker', 'delete timetracker');
 }
 
 function timetracker_theme() {
@@ -84,6 +84,7 @@ function timetracker_table(&$form_state, $node) {
     'uid' => t('User'),
     'value' => t('Hours'),
     'note' => t('Note'),
+    'delete' => '',
   );
   
   $form['titles'] = array(
@@ -118,13 +119,12 @@ function timetracker_table(&$form_state, $node) {
     '#type' => 'select',  
     '#title' => $titles['uid'],
     '#options' => $users_list,
-    '#default' => $user->uid, 
+    '#default_value' => $user->uid, 
   );
   
   $form['new_item']['value'] = array(
     '#type' => 'textfield',  
     '#title' => $titles['value'],
-    '#required' => TRUE,
     '#size' => 5,
     '#maxlength' => 5,
   );
@@ -174,8 +174,14 @@ function timetracker_table(&$form_state, $node) {
     );
     
     $form['items'][$tid]['timestamp']['#value'] = gmdate('M j, Y', $item['timestamp']);
-  } 
-  
+    $form['items'][$tid]["del"] = array(
+      '#name' => "delete-$tid",
+      '#type' => 'submit',
+      '#access' => user_access('delete timetracker'),
+      '#value' => t('Delete'),
+    ); 
+  }
+    
   $form['total'] = array(
     '#type' => 'item',
     '#title' => t('Total'),
@@ -186,29 +192,38 @@ function timetracker_table(&$form_state, $node) {
 }
 
 function timetracker_table_validate($form, &$form_state) {
-  if (!is_numeric($form_state['values']['new_item']['value'])) {
-    form_error($form['new_item']['value'], t('Hours must be a numeric value'));
-  }  
+  if ($form_state['clicked_button']['#value'] == t('Add')) {
+    if (!is_numeric($form_state['values']['new_item']['value'])) {
+      form_error($form['new_item']['value'], t('Hours must be a numeric value'));
+    }    
+  }
 }
 
 
 function timetracker_table_submit($form, &$form_state) {
-  $record = $form_state['values']['new_item'];
-  
-  if (module_exists('date_popup')) {
-    $record['timestamp'] = date_convert(
-      $form_state['values']['new_item']['timestamp'], 
-      DATE_DATETIME, 
-      DATE_UNIX,
-      $form['new_item']['timestamp']['#date_timezone']
-    );    
+  if ($form_state['clicked_button']['#value'] == t('Delete')) {
+    $tid = $form_state['clicked_button']['#array_parents'][1];
+    db_query('DELETE FROM {timetracker} WHERE tid = %d', $tid);    
   }
-  else {
-    $date = $form_state['values']['new_item']['timestamp'];
-    $record['timestamp'] = gmmktime(0, 0, 0, $date['month'], $date['day'], $date['year']);
-  }
+  elseif ($form_state['clicked_button']['#value'] == t('Add')) {
   
-  drupal_write_record('timetracker', $record);
+    $record = $form_state['values']['new_item'];
+    
+    if (module_exists('date_popup')) {
+      $record['timestamp'] = date_convert(
+        $form_state['values']['new_item']['timestamp'], 
+        DATE_DATETIME, 
+        DATE_UNIX,
+        $form['new_item']['timestamp']['#date_timezone']
+      );    
+    }
+    else {
+      $date = $form_state['values']['new_item']['timestamp'];
+      $record['timestamp'] = gmmktime(0, 0, 0, $date['month'], $date['day'], $date['year']);
+    }
+    
+    drupal_write_record('timetracker', $record);
+  }
 }
 
 function theme_timetracker_table($form) {
@@ -222,21 +237,31 @@ function theme_timetracker_table($form) {
     );
   }
   
+  $header[] = array(
+    'data' => '', 
+    'class' => "field-operations",
+  );
+  
+  
   $rows = array();
-  foreach (element_children($form['items']) as $index) {
+  foreach (element_children($form['items']) as $tid) {
     $row = array();    
     
-    $account->uid  = $form['items'][$index]['uid']['#value'];
-    $account->name = $form['items'][$index]['user_name']['#value'];
+    $account->uid  = $form['items'][$tid]['uid']['#value'];
+    $account->name = $form['items'][$tid]['user_name']['#value'];
   
     $rows[] = array(
-      $form['items'][$index]['timestamp']['#value'],
+      $form['items'][$tid]['timestamp']['#value'],
       theme('username', $account),
-      $form['items'][$index]['value']['#value'],
-      $form['items'][$index]['note']['#value'],
+      $form['items'][$tid]['value']['#value'],
+      $form['items'][$tid]['note']['#value'],
+      array(
+        'data' => drupal_render($form['items'][$tid]["del"]), 
+        'class' => 'field-operations'
+      ),
     );
     
-    drupal_render($form['items'][$index]);
+    drupal_render($form['items'][$tid]);
   }
   
   $rows[] = array(
@@ -247,21 +272,22 @@ function theme_timetracker_table($form) {
       ),
       array(
         'data' => $form['total']['#value'],
-        'colspan' => 2,
+        'colspan' => 3,
       ),
     ),
     'class' => 'total',
   );
-  
+    
   if (user_access('edit timetracker')) {
     $rows[] = array(
       drupal_render($form['new_item']['timestamp']),
       drupal_render($form['new_item']['uid']),
       drupal_render($form['new_item']['value']),
-      drupal_render($form['new_item']['note']) .' '. drupal_render($form['new_item']['add']),
+      drupal_render($form['new_item']['note']),
+      array('data' => drupal_render($form['new_item']['add']), 'class' => 'field-operations'),
     );
   }
-  
+
   drupal_render($form['total']);
   drupal_render($form['new_item']);
   drupal_render($form['items']);
