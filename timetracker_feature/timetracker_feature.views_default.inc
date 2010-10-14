@@ -204,7 +204,7 @@ function timetracker_feature_views_default_views() {
         'use_operator' => 0,
         'operator' => 'uid_op',
         'identifier' => 'uid',
-        'label' => 'User: Name',
+        'label' => 'User Name',
         'optional' => 1,
         'remember' => 0,
         'reduce' => 0,
@@ -228,7 +228,7 @@ function timetracker_feature_views_default_views() {
         'use_operator' => 0,
         'operator' => 'timestamp_op',
         'identifier' => 'timestamp',
-        'label' => 'Time tracking: Activity date',
+        'label' => 'Activity date',
         'optional' => 1,
         'remember' => 0,
       ),
@@ -247,6 +247,8 @@ function timetracker_feature_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Time Tracker');
+  $handler->override_option('empty', 'No activity records found.');
+  $handler->override_option('empty_format', '5');
   $handler->override_option('items_per_page', 0);
   $handler->override_option('style_plugin', 'table');
   $handler->override_option('style_options', array(
@@ -609,6 +611,7 @@ function timetracker_feature_views_default_views() {
   $translatables['timetracker'] = array(
     t('Defaults'),
     t('Full TimeTracker'),
+    t('No activity records found.'),
     t('Time Tracker'),
     t('TimeTracker'),
     t('User\'s TimeTracker'),

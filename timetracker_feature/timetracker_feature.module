@@ -8,3 +8,48 @@ include_once('timetracker_feature.features.inc');
 function timetracker_feature_init() {
   drupal_add_css(drupal_get_path('module', 'timetracker_feature') .'/timetracker_feature.css');
 }
+
+/**
+ * Implementation of hook_block().
+ */
+function timetracker_feature_block($op = 'list', $delta = 0) {
+  switch ($op) {
+    case 'list':
+      $blocks['filters'] = array('info' => t('Timetracker filter'));
+      return $blocks;
+    case 'view':
+      $function = '_timetracker_feature_block_'. $delta;
+      if (function_exists($function)) {
+        return call_user_func($function);
+      }
+      break;
+  }
+}
+
+
+/**
+ * Preprocessor for theme('views_view').
+ */
+function timetracker_feature_preprocess_views_view(&$vars) {
+  $view = $vars['view'];
+  if ($view->name == 'timetracker') {
+    // Whisk away exposed filter for display in a block
+    _timetracker_feature_block_filters($vars['exposed']);
+    $vars['exposed'] = '';
+  }
+}
+
+/**
+ * Filter block.
+ */
+function _timetracker_feature_block_filters($set = '') {
+  static $filters;
+  if (!empty($set)) {
+    $filters = $set;
+    return;
+  }
+  if (!empty($filters)) {
+    return array('subject' => t('Filter results'), 'content' => $filters);
+  }
+  return array();
+}
