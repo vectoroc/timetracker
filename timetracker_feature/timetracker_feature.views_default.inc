@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Helper to implementation of hook_views_default_views().
+ * Implementation of hook_views_default_views().
  */
-function _timetracker_feature_views_default_views() {
+function timetracker_feature_views_default_views() {
   $views = array();
 
   // Exported view: timetracker
@@ -239,8 +239,8 @@ function _timetracker_feature_views_default_views() {
     ),
   ));
   $handler->override_option('access', array(
-    'type' => 'atrium_feature',
-    'spaces_feature' => '0',
+    'type' => 'spaces_feature',
+    'spaces_feature' => 'timetracker_feature',
     'perm' => 'view any timetracker',
   ));
   $handler->override_option('cache', array(
@@ -287,7 +287,7 @@ function _timetracker_feature_views_default_views() {
       'default_argument_type' => 'og_group_node',
       'default_argument' => '',
       'validate_type' => 'none',
-      'validate_fail' => 'not found',
+      'validate_fail' => 'ignore',
       'break_phrase' => 0,
       'not' => 0,
       'id' => 'group_nid',
@@ -319,7 +319,6 @@ function _timetracker_feature_views_default_views() {
         'casetracker_basic_case' => 0,
         'casetracker_basic_project' => 0,
         'feed' => 0,
-        'testtype' => 0,
       ),
       'validate_argument_node_access' => 0,
       'validate_argument_nid_type' => 'nid',
