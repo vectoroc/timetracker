@@ -203,7 +203,7 @@ function timetracker_feature_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'uid_op',
-        'identifier' => 'uid',
+        'identifier' => 'user',
         'label' => 'User Name',
         'optional' => 1,
         'remember' => 0,
@@ -212,7 +212,7 @@ function timetracker_feature_views_default_views() {
       'id' => 'uid',
       'table' => 'users',
       'field' => 'uid',
-      'relationship' => 'nid',
+      'relationship' => 'uid',
     ),
     'timestamp' => array(
       'operator' => 'between',
@@ -227,8 +227,8 @@ function timetracker_feature_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'timestamp_op',
-        'identifier' => 'timestamp',
-        'label' => 'Activity date',
+        'identifier' => 'date',
+        'label' => 'Activity date',
         'optional' => 1,
         'remember' => 0,
       ),
