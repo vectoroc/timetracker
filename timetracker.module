@@ -63,6 +63,9 @@ function timetracker_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     
     $node->timetracker = $time_records;
   }
+  elseif ($op == 'delete') {
+    db_query('DELETE FROM {timetracker} WHERE nid = %d', $node->nid);
+  }
 }
 
 /**
@@ -201,9 +204,18 @@ function timetracker_table_validate($form, &$form_state) {
 
 
 function timetracker_table_submit($form, &$form_state) {
+  global $user;
+  
   if ($form_state['clicked_button']['#value'] == t('Delete')) {
     $tid = $form_state['clicked_button']['#array_parents'][1];
-    db_query('DELETE FROM {timetracker} WHERE tid = %d', $tid);    
+    if ($tt_entry = db_fetch_object(db_query('SELECT * FROM {timetracker} WHERE tid = %d', $tid))) { 
+      db_query('DELETE FROM {timetracker} WHERE tid = %d', $tid);
+      watchdog('timetracker', 'deleted timetracker entry (@value h. / @date / @note)', array(
+        '@value' => $tt_entry->value,
+        '@date'  => format_date($tt_entry->timestamp, 'small'),
+        '@note'  => $tt_entry->note,
+      ), WATCHDOG_NOTICE,l('case', 'node/'. $tt_entry->nid) .' / '. l('user', 'user/'. $tt_entry->uid));
+    }
   }
   elseif ($form_state['clicked_button']['#value'] == t('Add')) {
   
@@ -223,6 +235,14 @@ function timetracker_table_submit($form, &$form_state) {
     }
     
     drupal_write_record('timetracker', $record);
+    $tt_entry = (object) $record; 
+    if ($tt_entry->tid) {
+      watchdog('timetracker', 'added timetracker entry (@value h / @date / @note', array(
+        '@value' => $tt_entry->value,
+        '@date'  => format_date($tt_entry->timestamp, 'small'),
+        '@note'  => $tt_entry->note,
+      ), WATCHDOG_NOTICE,l('case', 'node/'. $tt_entry->nid) .' / '. l('user', 'user/'. $tt_entry->uid));
+    }
   }
 }
 
