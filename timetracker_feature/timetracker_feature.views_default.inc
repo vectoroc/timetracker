@@ -214,6 +214,27 @@ function timetracker_feature_views_default_views() {
       'field' => 'uid',
       'relationship' => 'uid',
     ),
+    'pid' => array(
+      'operator' => 'or',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'pid_op',
+        'identifier' => 'pid',
+        'label' => 'Project',
+        'optional' => 1,
+        'single' => 0,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'pid',
+      'table' => 'casetracker_case',
+      'field' => 'pid',
+      'relationship' => 'nid',
+      'reduce_duplicates' => 0,
+    ),
     'timestamp' => array(
       'operator' => 'between',
       'value' => array(
@@ -250,31 +271,59 @@ function timetracker_feature_views_default_views() {
   $handler->override_option('empty', 'No activity records found.');
   $handler->override_option('empty_format', '5');
   $handler->override_option('items_per_page', 0);
-  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_plugin', 'views_calc');
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'asc',
     'columns' => array(
+      'title' => 'title',
+      'name' => 'name',
       'timestamp' => 'timestamp',
       'value' => 'value',
       'note' => 'note',
     ),
     'info' => array(
-      'timestamp' => array(
+      'title' => array(
         'sortable' => 0,
         'separator' => '',
+        'justification' => 'views_calc_justify_none',
+        'has_calc' => 0,
+        'calc' => array(),
+      ),
+      'name' => array(
+        'sortable' => 0,
+        'separator' => '',
+        'justification' => 'views_calc_justify_none',
+        'has_calc' => 0,
+        'calc' => array(),
+      ),
+      'timestamp' => array(
+        'sortable' => 1,
+        'separator' => '',
+        'justification' => 'views_calc_justify_center',
+        'has_calc' => 0,
+        'calc' => array(),
       ),
       'value' => array(
-        'sortable' => 0,
+        'sortable' => 1,
         'separator' => '',
+        'justification' => 'views_calc_justify_right',
+        'has_calc' => 1,
+        'calc' => array(
+          'SUM' => 'SUM',
+        ),
       ),
       'note' => array(
         'separator' => '',
+        'justification' => 'views_calc_justify_none',
+        'has_calc' => 0,
+        'calc' => array(),
       ),
     ),
-    'default' => '-1',
+    'default' => 'timestamp',
+    'detailed_values' => '0',
   ));
   $handler = $view->new_display('page', 'TimeTracker', 'page_4');
   $handler->override_option('arguments', array(
