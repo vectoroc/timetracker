@@ -26,6 +26,17 @@ function timetracker_feature_block($op = 'list', $delta = 0) {
   }
 }
 
+function timetracker_feature_form_timetracker_table_alter(&$form, &$form_state) {
+  $users   = module_invoke('views', 'get_view_result', 'timetracker_users', 'default');
+  $options = array();
+  foreach ($users as $user) {
+    if (array_key_exists($user->uid, $form['new_item']['uid']['#options'])) {
+      $options[$user->uid] = $user->users_name;
+    }
+  }
+  $form['new_item']['uid']['#options'] = $options;
+}
+
 
 /**
  * Preprocessor for theme('views_view').
