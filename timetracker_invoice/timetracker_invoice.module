@@ -1,0 +1,179 @@
+<?php
+
+include_once('timetracker_invoice.features.inc');
+
+
+//function timetracker_invoice_node_info() {
+//  
+//}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type != 'timetracker_invoice') return;
+  
+  switch ($op) {
+    case 'validate':
+      // ensure that tids have not been assigned to invoice
+      if (is_array($node->timetracker) && count($node->timetracker)) { 
+        $query = 'SELECT COUNT(tid) FROM {timetracker} WHERE invoice_nid > 0 AND tid in ('. db_placeholders($node->timetracker) .')';
+        if (db_result(db_query($query, $node->timetracker))) {
+          form_set_error(NUL, t('Some timetracker entries has already been invoiced'));
+        }
+      }
+      else {
+        form_set_error(NUL, t('Not assigned timetracker etnries'));
+      }
+      break;
+
+    case 'load':
+      $res = db_query('SELECT tid FROM {timetracker} WHERE invoice_nid = %d', $node->nid);
+      while($tid = db_result($res)) {
+        $node->timetracker[$tid] = $tid;
+      }
+      break;
+      
+    case 'delete':
+      db_query('UPDATE {timetracker} SET invoice_nid = 0 WHERE invoice_nid = %d', $node->nid);
+      break;
+
+    case 'insert':
+    case 'save':
+      if (is_array($node->timetracker) && count($node->timetracker)) {
+        $query = 'UPDATE {timetracker} SET invoice_nid = %d WHERE tid in ('. db_placeholders($node->timetracker) .')';
+        db_query($query, array_merge(array($node->nid), $node->timetracker));
+      }
+      break;
+      
+    case 'view':
+      $node->content['timetracker_invoice'] = array(
+        '#value' => views_embed_view('timetracker_invoice'),
+      );
+      break;
+  }
+}
+
+
+function timetracker_invoice_form_alter(&$form, $form_state, $form_id) {
+//  dpm($form);
+  if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
+    // Add elements to the node form
+    $node = $form['#node'];
+    if ($form['type']['#value'] == 'timetracker_invoice') {
+      $form['timetracker'] = array('#type' => 'value');
+    } 
+  }
+}
+
+/**
+ * Implementation of hook_views_data_alter().
+ */
+function timetracker_invoice_views_data_alter(&$data) {
+  $data['timetracker']['table']['join']['invoice'] = array(
+    'table' => 'node',
+    'left_field' => 'nid',
+    'field' => 'nid',
+  );
+  
+  $data['timetracker']['invoice_nid'] = array(
+    'title' => t('Invoice Node'),
+    'help' => t('The invoice node related to the time entry.'),
+    'relationship' => array(
+      'base' => 'node',
+      'field' => 'nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Invoice'),
+    ),
+  );
+}
+
+function timetracker_views_bulk_operations_object_info() {
+  $object_info = array(
+    'timetracker' => array(
+      'type' => 'timetracker',
+      'base_table' => 'timetracker',
+      'load' => '_views_bulk_operations_timetracker_load',
+//      'normalize' => '_views_bulk_operations_normalize_node_context',
+//      'hook' => 'taxonomy',
+//      'access' => 'node_access',
+      'oid' => 'tid',
+      'title' => 'note',
+    ),
+    
+  );
+  
+  return $object_info;
+}
+
+function _views_bulk_operations_timetracker_load($tid) {
+  return db_fetch_object(db_query('SELECT * FROM {timetracker} WHERE tid = %d', $tid));  
+}
+
+/**
+ * Implementation oh hook_timetracker_operations(). 
+ */
+function timetracker_invoice_timetracker_operations() {
+  $operations['create_invoice'] = array(
+    'label' => t('Create an invoice'),
+    'callback' => 'timetracker_invoice_create_action',
+  );
+
+//  if (empty($operation['callback'])) continue;
+//        $key = $operation['callback'] . (empty($operation['callback arguments']) ? '' : ':'. md5(serialize($operation['callback arguments'])));
+//        if (!isset($operation['behavior'])) { // assume operations modify nodes by default
+//          $operation['behavior'] = array('changes_node_property');
+//        }
+//        $operations[$key] = array(
+//          'key'                 => $key,
+//          'label'               => $operation['label'],
+//          'callback'            => $operation['callback'],
+//          'callback arguments'  => isset($operation['callback arguments']) ? $operation['callback arguments'] : array(),
+//          'configurable'        => isset($operation['configurable']) ? $operation['configurable'] : FALSE,
+//          'form properties'     => isset($operation['form properties']) ? $operation['form properties'] : array(),
+//          'source'              => 'operation',
+//          'type'                => $object_type,
+//          'aggregate'           => isset($operation['aggregate']) ? (int)$operation['aggregate'] : VBO_AGGREGATE_OPTIONAL,
+//          'access op'           => $this->get_access_op($operation),
+//          'permissions'         => isset($operation['permissions']) ? $operation['permissions'] : NULL,
+//          'hooks'               => array(),
+//        );  
+  return $operations;
+}
+
+function timetracker_invoice_create_action($tids, $context) {
+  global $user;
+  
+  $form_state = array();
+  module_load_include('inc', 'node', 'node.pages');
+  
+  $node = array(
+    'type' => 'timetracker_invoice',
+//    'og_groups' => $_GIT['gids'],
+  );
+  
+  $form_state['values']['type'] = 'timetracker_invoice';
+  $form_state['values']['status'] = 1; 
+  $form_state['values']['title'] = t('Invoice from !user_name (!ts)', array('!user_name' => $user->name, '!ts' => time()));   
+  $form_state['values']['op'] = t('Save');  
+  $form_state['values']['name'] = $user->name;
+  $form_state['values']['timetracker'] = $tids;
+  
+  drupal_execute('timetracker_invoice_node_form', $form_state, (object) $node);
+}
+
+/**
+ * Implementation of hook_context_links_alter();
+ */
+function timetracker_invoice_context_links_alter(&$links) {
+  if (context_get('context', 'timetracker_listing')) {
+//    $group = (object) og_get_group_context();
+    
+    $links['create-invoice'] = array(
+      'title' => t('Create Invoice'),
+      'href' => 'timetracker/create-invoice', // TODO create invoice url
+      'purl' => array('disabled' => TRUE),
+//      'query' => 'gids[]='. $group->nid,   //TODO: post node to the group
+    );
+  }
+}
