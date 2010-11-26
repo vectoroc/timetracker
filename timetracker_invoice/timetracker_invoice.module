@@ -175,5 +175,11 @@ function timetracker_invoice_context_links_alter(&$links) {
       'purl' => array('disabled' => TRUE),
 //      'query' => 'gids[]='. $group->nid,   //TODO: post node to the group
     );
+    
+    $links['list-invoices'] = array(
+      'title' => t('List Invoices'),
+      'href' => 'timetracker/list-invoices', // TODO create invoice url
+      'purl' => array('disabled' => TRUE),
+    );
   }
 }
