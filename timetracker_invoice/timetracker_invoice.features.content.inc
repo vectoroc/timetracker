@@ -411,24 +411,23 @@ function timetracker_invoice_content_default_fields() {
         'module' => 'text',
       ),
     ),
-    'field_paid' => array(
-      'field_name' => 'field_paid',
+    'field_invoice_status' => array(
+      'field_name' => 'field_invoice_status',
       'type_name' => 'timetracker_invoice',
       'display_settings' => array(
-        'weight' => '31',
-        'parent' => '',
         'label' => array(
           'format' => 'above',
+          'exclude' => 0,
+        ),
+        '5' => array(
+          'format' => 'default',
+          'exclude' => 0,
         ),
         'teaser' => array(
           'format' => 'default',
           'exclude' => 0,
         ),
         'full' => array(
-          'format' => 'default',
-          'exclude' => 0,
-        ),
-        '5' => array(
           'format' => 'default',
           'exclude' => 0,
         ),
@@ -451,7 +450,7 @@ function timetracker_invoice_content_default_fields() {
       ),
       'widget_active' => '1',
       'type' => 'text',
-      'required' => '0',
+      'required' => '1',
       'multiple' => '0',
       'db_storage' => '1',
       'module' => 'text',
@@ -468,19 +467,21 @@ function timetracker_invoice_content_default_fields() {
       ),
       'text_processing' => '0',
       'max_length' => '',
-      'allowed_values' => 'paid',
+      'allowed_values' => '0|unpaid
+1|paid
+2|rejected',
       'allowed_values_php' => '',
       'widget' => array(
         'default_value' => array(
           '0' => array(
-            'value' => 'paid',
+            'value' => 'unpaid',
           ),
         ),
         'default_value_php' => NULL,
-        'label' => 'Paid',
+        'label' => 'Status',
         'weight' => '31',
-        'description' => 'Mark this invoice as paid',
-        'type' => 'optionwidgets_onoff',
+        'description' => '',
+        'type' => 'optionwidgets_select',
         'module' => 'optionwidgets',
       ),
     ),
@@ -571,25 +572,24 @@ function timetracker_invoice_content_default_fields() {
     ),
   );
 
-  // Exported field: field_paid
-  $fields['timetracker_invoice-field_paid'] = array(
-    'field_name' => 'field_paid',
+  // Exported field: field_invoice_status
+  $fields['timetracker_invoice-field_invoice_status'] = array(
+    'field_name' => 'field_invoice_status',
     'type_name' => 'timetracker_invoice',
     'display_settings' => array(
-      'weight' => '31',
-      'parent' => '',
       'label' => array(
         'format' => 'above',
+        'exclude' => 0,
+      ),
+      '5' => array(
+        'format' => 'default',
+        'exclude' => 0,
       ),
       'teaser' => array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '5' => array(
         'format' => 'default',
         'exclude' => 0,
       ),
@@ -612,32 +612,34 @@ function timetracker_invoice_content_default_fields() {
     ),
     'widget_active' => '1',
     'type' => 'text',
-    'required' => '0',
+    'required' => '1',
     'multiple' => '0',
     'module' => 'text',
     'active' => '1',
     'text_processing' => '0',
     'max_length' => '',
-    'allowed_values' => 'paid',
+    'allowed_values' => '0|unpaid
+1|paid
+2|rejected',
     'allowed_values_php' => '',
     'widget' => array(
       'default_value' => array(
         '0' => array(
-          'value' => 'paid',
+          'value' => 'unpaid',
         ),
       ),
       'default_value_php' => NULL,
-      'label' => 'Paid',
+      'label' => 'Status',
       'weight' => '31',
-      'description' => 'Mark this invoice as paid',
-      'type' => 'optionwidgets_onoff',
+      'description' => '',
+      'type' => 'optionwidgets_select',
       'module' => 'optionwidgets',
     ),
   );
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('Paid');
+  t('Status');
 
   return $fields;
 }

@@ -24,34 +24,39 @@ function timetracker_invoice_perm() {
 function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   global $user;
   if ($node->type != 'timetracker_invoice') return;
-  
+
   switch ($op) {
     case 'validate':
+      // do validation only for newly created nodes
+      if (is_null($node->nid)) {
       // ensure that tids have not been assigned to invoice
-      if (is_array($node->timetracker) && count($node->timetracker)) { 
-        $query = 'SELECT COUNT(tid) FROM {timetracker} WHERE invoice_nid > 0 AND tid in ('. db_placeholders($node->timetracker) .')';
-        if (db_result(db_query($query, $node->timetracker))) {
-          form_set_error(NUL, t('Some timetracker entries has already been invoiced'));
+        if (is_array($node->timetracker) && count($node->timetracker)) { 
+          $query = 'SELECT COUNT(tid) FROM {timetracker} WHERE invoice_nid > 0 AND tid in ('. db_placeholders($node->timetracker) .')';
+          if (db_result(db_query($query, $node->timetracker))) {
+            form_set_error(NUL, t('Some timetracker entries has already been invoiced'));
+          }
         }
-      }
-      else {
-        form_set_error(NUL, t('Not assigned timetracker etnries'));
+        else {
+          form_set_error(NUL, t('Not assigned timetracker etnries'));
+        }
       }
       break;
 
     case 'load':
       $res = db_query('SELECT tid FROM {timetracker} WHERE invoice_nid = %d', $node->nid);
+      $data = array();
       while($tid = db_result($res)) {
-        $node->timetracker[$tid] = $tid;
+        $data['timetracker'][$tid] = $tid;
       }
+      return $data;
       break;
       
     case 'delete':
       db_query('UPDATE {timetracker} SET invoice_nid = 0 WHERE invoice_nid = %d', $node->nid);
       break;
 
+//    case 'save':
     case 'insert':
-    case 'save':
       if (is_array($node->timetracker) && count($node->timetracker)) {
         $query = 'UPDATE {timetracker} SET invoice_nid = %d WHERE tid in ('. db_placeholders($node->timetracker) .')';
         db_query($query, array_merge(array($node->nid), $node->timetracker));
@@ -70,7 +75,6 @@ function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
 
 function timetracker_invoice_form_alter(&$form, $form_state, $form_id) {
-//  dpm($form);
   if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
     // Add elements to the node form
     $node = $form['#node'];

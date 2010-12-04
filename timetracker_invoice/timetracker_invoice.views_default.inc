@@ -627,8 +627,8 @@ function timetracker_invoice_views_default_views() {
       'field' => 'title',
       'relationship' => 'none',
     ),
-    'field_paid_value' => array(
-      'label' => 'Paid',
+    'field_invoice_status_value' => array(
+      'label' => 'Status',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -660,9 +660,9 @@ function timetracker_invoice_views_default_views() {
         'multiple_reversed' => FALSE,
       ),
       'exclude' => 0,
-      'id' => 'field_paid_value',
-      'table' => 'node_data_field_paid',
-      'field' => 'field_paid_value',
+      'id' => 'field_invoice_status_value',
+      'table' => 'node_data_field_invoice_status',
+      'field' => 'field_invoice_status_value',
       'relationship' => 'none',
     ),
   ));
@@ -683,27 +683,24 @@ function timetracker_invoice_views_default_views() {
       'field' => 'type',
       'relationship' => 'none',
     ),
-    'field_paid_value_many_to_one' => array(
+    'field_invoice_status_value_many_to_one' => array(
       'operator' => 'or',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'field_paid_value_many_to_one_op',
-        'identifier' => 'field_paid_value_many_to_one',
-        'label' => 'Invoice Status',
+        'operator' => 'field_invoice_status_value_many_to_one_op',
+        'identifier' => 'field_invoice_status_value_many_to_one',
+        'label' => 'Status',
         'optional' => 1,
         'single' => 1,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'field_paid_value_many_to_one',
-      'table' => 'node_data_field_paid',
-      'field' => 'field_paid_value_many_to_one',
-      'override' => array(
-        'button' => 'Override',
-      ),
+      'id' => 'field_invoice_status_value_many_to_one',
+      'table' => 'node_data_field_invoice_status',
+      'field' => 'field_invoice_status_value_many_to_one',
       'relationship' => 'none',
       'reduce_duplicates' => 0,
     ),
