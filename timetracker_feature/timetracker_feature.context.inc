@@ -29,6 +29,7 @@ function timetracker_feature_context_default_contexts() {
         ),
       ),
     ),
+    'menu' => 'timetracker',
   );
   $context->condition_mode = 0;
 
