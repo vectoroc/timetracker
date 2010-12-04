@@ -474,7 +474,7 @@ function timetracker_invoice_content_default_fields() {
       'widget' => array(
         'default_value' => array(
           '0' => array(
-            'value' => 'unpaid',
+            'value' => '0',
           ),
         ),
         'default_value_php' => NULL,
@@ -625,7 +625,7 @@ function timetracker_invoice_content_default_fields() {
     'widget' => array(
       'default_value' => array(
         '0' => array(
-          'value' => 'unpaid',
+          'value' => '0',
         ),
       ),
       'default_value_php' => NULL,

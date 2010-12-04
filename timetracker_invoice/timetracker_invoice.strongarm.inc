@@ -165,13 +165,6 @@ function timetracker_invoice_strongarm() {
       'collapsed' => 1,
       'hidden' => 1,
     ),
-    'field_paid' => array(
-      'region' => 'right',
-      'weight' => '31',
-      'has_required' => FALSE,
-      'title' => 'Paid',
-      'hidden' => 0,
-    ),
     'og_nodeapi' => array(
       'region' => 'main',
       'weight' => '0',
@@ -179,6 +172,12 @@ function timetracker_invoice_strongarm() {
       'title' => 'Groups',
       'collapsed' => 0,
       'hidden' => 0,
+    ),
+    'field_invoice_status' => array(
+      'region' => 'main',
+      'weight' => '31',
+      'has_required' => TRUE,
+      'title' => 'Status',
     ),
   );
 

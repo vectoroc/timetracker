@@ -27,18 +27,24 @@ function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
   switch ($op) {
     case 'validate':
-      // do validation only for newly created nodes
-      if (is_null($node->nid)) {
       // ensure that tids have not been assigned to invoice
-        if (is_array($node->timetracker) && count($node->timetracker)) { 
-          $query = 'SELECT COUNT(tid) FROM {timetracker} WHERE invoice_nid > 0 AND tid in ('. db_placeholders($node->timetracker) .')';
-          if (db_result(db_query($query, $node->timetracker))) {
-            form_set_error(NUL, t('Some timetracker entries has already been invoiced'));
-          }
+      if (is_array($node->timetracker) && count($node->timetracker)) { 
+        $query = 'SELECT COUNT(tid) FROM {timetracker} WHERE invoice_nid > 0'
+               . ' AND tid in ('. db_placeholders($node->timetracker) .')';
+               
+        $args = $node->timetracker;
+        
+        if ($node->nid) {
+          $query .= ' AND invoice_nid <> %d';
+          $args[] = $node->nid;
         }
-        else {
-          form_set_error(NUL, t('Not assigned timetracker etnries'));
+           
+        if (db_result(db_query($query, $args))) {
+          form_set_error(NUL, t('Some timetracker entries has already been invoiced'));
         }
+      }
+      else {
+        form_set_error(NUL, t('Not assigned timetracker etnries'));
       }
       break;
 
@@ -55,7 +61,8 @@ function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       db_query('UPDATE {timetracker} SET invoice_nid = 0 WHERE invoice_nid = %d', $node->nid);
       break;
 
-//    case 'save':
+    case 'save':
+      timetracker_invoice_nodeapi($node, 'delete');
     case 'insert':
       if (is_array($node->timetracker) && count($node->timetracker)) {
         $query = 'UPDATE {timetracker} SET invoice_nid = %d WHERE tid in ('. db_placeholders($node->timetracker) .')';
@@ -76,11 +83,15 @@ function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
 function timetracker_invoice_form_alter(&$form, $form_state, $form_id) {
   if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
+//  dpm(compact('form', 'form_state', 'form_id'));
     // Add elements to the node form
     $node = $form['#node'];
     if ($form['type']['#value'] == 'timetracker_invoice') {
-      $form['timetracker'] = array('#type' => 'value');
-    } 
+      $form['timetracker'] = array(
+        '#type' => 'value',
+        '#default_value' => $node->timetracker,
+      );
+    }
   }
 }
 
@@ -173,12 +184,16 @@ function timetracker_invoice_create_action($tids, $context) {
   
   $form_state['values']['type'] = 'timetracker_invoice';
   $form_state['values']['status'] = 1; 
-  $form_state['values']['title'] = t('Invoice from !user_name (!ts)', array('!user_name' => $user->name, '!ts' => time()));   
+  $form_state['values']['title'] = _timetracker_invoice_format_title($user, $tids);   
   $form_state['values']['op'] = t('Save');  
   $form_state['values']['name'] = $user->name;
   $form_state['values']['timetracker'] = $tids;
+  // subscribe the author to notifications
+  $form_state['values']['notifications_team']['selected'] = $user->uid;
+  $form_state['values']['notifications_content_disable'] = 1;
   
   drupal_execute('timetracker_invoice_node_form', $form_state, (object) $node);
+  dpm($form_state);
 }
 
 /**
@@ -247,4 +262,33 @@ function _timetracker_invoice_block_filters($set = '') {
     return array('subject' => t('Filter results'), 'content' => $filters);
   }
   return array();
+}
+
+function _timetracker_invoice_get_date_range($tids) {
+  $query = 'SELECT MIN(timestamp) as `min`, MAX(timestamp) as `max` FROM {timetracker} WHERE tid in ('. db_placeholders($tids) .')';
+  $bounds = db_fetch_object(db_query($query, $tids));
+  
+  $lo_date = format_date($bounds->min, 'small');
+  $hi_date = format_date($bounds->max, 'small');
+  if ($bounds->min == $bounds->max) {
+    return $lo_date;
+  }
+  else {
+    return $lo_date.' - '.$hi_date;
+  }
+}
+
+function _timetracker_invoice_format_title($account, $tids) {
+  $date_range = _timetracker_invoice_get_date_range($tids);
+  $title = t('Invoice from !user_name (!date_range)', array(
+    '!user_name' => $account->name, 
+    '!date_range' => $date_range,
+  ));
+  
+  $count = db_result(db_query('SELECT COUNT(title) FROM {node} WHERE title LIKE "%s%%"', $title));
+  if ($count) {
+    $title .= ' #'. ($count + 1);
+  }
+  
+  return $title;
 }
