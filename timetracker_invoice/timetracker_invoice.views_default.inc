@@ -528,9 +528,9 @@ function timetracker_invoice_views_default_views() {
   $handler->override_option('path', 'timetracker/create-invoice');
   $handler->override_option('menu', array(
     'type' => 'none',
-    'title' => 'Create Time Tracker Invoice',
+    'title' => 'Create Invoice',
     'description' => '',
-    'weight' => '0',
+    'weight' => '2',
     'name' => 'features',
   ));
   $handler->override_option('tab_options', array(
@@ -709,7 +709,9 @@ function timetracker_invoice_views_default_views() {
     ),
   ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'spaces_feature',
+    'spaces_feature' => 'timetracker_feature',
+    'perm' => 'view any timetracker invoice',
   ));
   $handler->override_option('cache', array(
     'type' => 'none',
@@ -748,10 +750,10 @@ function timetracker_invoice_views_default_views() {
   $handler = $view->new_display('page', 'Invoices', 'page_1');
   $handler->override_option('path', 'timetracker/list-invoices');
   $handler->override_option('menu', array(
-    'type' => 'none',
-    'title' => '',
+    'type' => 'tab',
+    'title' => 'Invoices',
     'description' => '',
-    'weight' => 0,
+    'weight' => '1',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
