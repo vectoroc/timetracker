@@ -17,7 +17,9 @@ function timetracker_feature_user_default_permissions() {
   // Exported permission: view any timetracker
   $permissions['view any timetracker'] = array(
     'name' => 'view any timetracker',
-    'roles' => array(),
+    'roles' => array(
+      '0' => 'administrator',
+    ),
   );
 
   // Exported permission: view own timetracker
