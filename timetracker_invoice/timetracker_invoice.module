@@ -2,15 +2,27 @@
 
 include_once('timetracker_invoice.features.inc');
 
+/**
+ * Implementation of hook_init(). 
+ */
+function timetracker_invoice_init() {
+  if ($_GET['q'] == 'node/add/timetracker-invoice') {
+    drupal_goto('timetracker/create-invoice');
+  }
+}
 
-//function timetracker_invoice_node_info() {
-//  
-//}
+/**
+ * Implementation of hook_perm(). 
+ */
+function timetracker_invoice_perm() {
+  return array('view any timetracker invoice');
+}
 
 /**
  * Implementation of hook_nodeapi().
  */
 function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  global $user;
   if ($node->type != 'timetracker_invoice') return;
   
   switch ($op) {
@@ -47,9 +59,11 @@ function timetracker_invoice_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       break;
       
     case 'view':
-      $node->content['timetracker_invoice'] = array(
-        '#value' => views_embed_view('timetracker_invoice'),
-      );
+      if ($node->uid == $user->uid || user_access('view any timetracker invoice')) {
+        $node->content['timetracker_invoice'] = array(
+          '#value' => views_embed_view('timetracker_invoice'),
+        );
+      }
       break;
   }
 }
@@ -147,9 +161,10 @@ function timetracker_invoice_create_action($tids, $context) {
   $form_state = array();
   module_load_include('inc', 'node', 'node.pages');
   
+//  $group = (object) og_get_group_context();  
   $node = array(
     'type' => 'timetracker_invoice',
-//    'og_groups' => $_GIT['gids'],
+//    'og_groups' => array(),
   );
   
   $form_state['values']['type'] = 'timetracker_invoice';
@@ -163,23 +178,69 @@ function timetracker_invoice_create_action($tids, $context) {
 }
 
 /**
- * Implementation of hook_context_links_alter();
+ * Implementation of hook_context_default_contexts_alter().
  */
-function timetracker_invoice_context_links_alter(&$links) {
-  if (context_get('context', 'timetracker_listing')) {
-//    $group = (object) og_get_group_context();
-    
-    $links['create-invoice'] = array(
-      'title' => t('Create Invoice'),
-      'href' => 'timetracker/create-invoice', // TODO create invoice url
-      'purl' => array('disabled' => TRUE),
-//      'query' => 'gids[]='. $group->nid,   //TODO: post node to the group
+function timetracker_invoice_context_default_contexts_alter(&$contexts) {
+  if (module_exists('timetracker_feature') && !empty($contexts['timetracker_listing'])) {
+    $contexts['timetracker_listing']->conditions['node'] = array(
+      'values' => array('timetracker_invoice' => 'timetracker_invoice'),
+      'options' => array('node_form' => 1),
     );
     
-    $links['list-invoices'] = array(
-      'title' => t('List Invoices'),
-      'href' => 'timetracker/list-invoices', // TODO create invoice url
-      'purl' => array('disabled' => TRUE),
+    $contexts['timetracker_listing']->conditions['views']['values'] += array(
+      'timetracker_invoice:page_4' => 'timetracker_invoice:page_4',
+      'timetracker_invoice_listing:page_1' => 'timetracker_invoice_listing:page_1',
+    );
+    
+    $contexts['timetracker_listing']->reactions['block']['blocks']['timetracker_invoice-filters'] = array(
+      'module' => 'timetracker_invoice', 
+      'delta' => 'filters',
+      'region' => 'right', 
+      'weight' => 0,
     );
   }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function timetracker_invoice_block($op = 'list', $delta = 0) {
+  switch ($op) {
+    case 'list':
+      $blocks['filters'] = array('info' => t('Timetracker Invoice filter'));
+      return $blocks;
+    case 'view':
+      $function = '_timetracker_invoice_block_'. $delta;
+      if (function_exists($function)) {
+        return call_user_func($function);
+      }
+      break;
+  }
+}
+
+/**
+ * Preprocessor for theme('views_view').
+ */
+function timetracker_invoice_preprocess_views_view(&$vars) {
+  $view = $vars['view'];
+  if ($view->name == 'timetracker_invoice_listing' || $view->name == 'timetracker_invoice') {
+    // Whisk away exposed filter for display in a block
+    _timetracker_invoice_block_filters($vars['exposed']);
+    $vars['exposed'] = '';
+  }
+}
+
+/**
+ * Filter block.
+ */
+function _timetracker_invoice_block_filters($set = '') {
+  static $filters;
+  if (!empty($set)) {
+    $filters = $set;
+    return;
+  }
+  if (!empty($filters)) {
+    return array('subject' => t('Filter results'), 'content' => $filters);
+  }
+  return array();
 }

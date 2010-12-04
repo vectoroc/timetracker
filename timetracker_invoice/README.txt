@@ -1,0 +1,1 @@
+This module relies on http://drupal.org/files/issues/959040-purl.patch (#959040)
