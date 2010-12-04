@@ -193,7 +193,7 @@ function timetracker_invoice_create_action($tids, $context) {
   $form_state['values']['notifications_content_disable'] = 1;
   
   drupal_execute('timetracker_invoice_node_form', $form_state, (object) $node);
-  dpm($form_state);
+//  dpm($form_state);
 }
 
 /**
