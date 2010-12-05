@@ -6,6 +6,7 @@ include_once('timetracker_invoice.features.inc');
  * Implementation of hook_init(). 
  */
 function timetracker_invoice_init() {
+  drupal_add_css(drupal_get_path('module', 'timetracker_invoice') .'/timetracker_invoice.css');
   if ($_GET['q'] == 'node/add/timetracker-invoice') {
     drupal_goto('timetracker/create-invoice');
   }
