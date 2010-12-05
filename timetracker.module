@@ -108,7 +108,7 @@ function timetracker_table(&$form_state, $node) {
   
   if (module_exists('date_popup')) {
     $form['new_item']['timestamp']['#type'] = 'date_popup';
-    $form['new_item']['timestamp']['#default_value'] = gmdate('Y-m-d H:i:s', time());
+    $form['new_item']['timestamp']['#default_value'] = format_date(time(), 'custom', 'Y-m-d H:i:s');
   }
   
   if (!user_access('view any timetracker')) {
@@ -176,7 +176,7 @@ function timetracker_table(&$form_state, $node) {
       '#value' => $item['user_name'],
     );
     
-    $form['items'][$tid]['timestamp']['#value'] = gmdate('M j, Y', $item['timestamp']);
+    $form['items'][$tid]['timestamp']['#value'] = format_date($item['timestamp'], 'small');
     $form['items'][$tid]["del"] = array(
       '#name' => "delete-$tid",
       '#type' => 'submit',
