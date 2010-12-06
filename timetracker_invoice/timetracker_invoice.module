@@ -147,42 +147,23 @@ function timetracker_invoice_timetracker_operations() {
   $operations['create_invoice'] = array(
     'label' => t('Create an invoice'),
     'callback' => 'timetracker_invoice_create_action',
+    'configurable' => TRUE,
+    'aggregate' => TRUE,
   );
 
-//  if (empty($operation['callback'])) continue;
-//        $key = $operation['callback'] . (empty($operation['callback arguments']) ? '' : ':'. md5(serialize($operation['callback arguments'])));
-//        if (!isset($operation['behavior'])) { // assume operations modify nodes by default
-//          $operation['behavior'] = array('changes_node_property');
-//        }
-//        $operations[$key] = array(
-//          'key'                 => $key,
-//          'label'               => $operation['label'],
-//          'callback'            => $operation['callback'],
-//          'callback arguments'  => isset($operation['callback arguments']) ? $operation['callback arguments'] : array(),
-//          'configurable'        => isset($operation['configurable']) ? $operation['configurable'] : FALSE,
-//          'form properties'     => isset($operation['form properties']) ? $operation['form properties'] : array(),
-//          'source'              => 'operation',
-//          'type'                => $object_type,
-//          'aggregate'           => isset($operation['aggregate']) ? (int)$operation['aggregate'] : VBO_AGGREGATE_OPTIONAL,
-//          'access op'           => $this->get_access_op($operation),
-//          'permissions'         => isset($operation['permissions']) ? $operation['permissions'] : NULL,
-//          'hooks'               => array(),
-//        );  
   return $operations;
 }
 
-function timetracker_invoice_create_action($tids, $context) {
+function timetracker_invoice_create_action($tids, $og_gid = NULL) {
   global $user;
   
-  $form_state = array();
   module_load_include('inc', 'node', 'node.pages');
   
-//  $group = (object) og_get_group_context();  
   $node = array(
     'type' => 'timetracker_invoice',
-//    'og_groups' => array(),
   );
   
+  $form_state = array();
   $form_state['values']['type'] = 'timetracker_invoice';
   $form_state['values']['status'] = 1; 
   $form_state['values']['title'] = _timetracker_invoice_format_title($user, $tids);   
@@ -193,8 +174,40 @@ function timetracker_invoice_create_action($tids, $context) {
   $form_state['values']['notifications_team']['selected'] = $user->uid;
   $form_state['values']['notifications_content_disable'] = 1;
   
+  if (!og_get_group_context() && $og_gid) {
+    $node['og_groups'] = array($og_gid => $og_gid);
+  }
+  
   drupal_execute('timetracker_invoice_node_form', $form_state, (object) $node);
-//  dpm($form_state);
+}
+
+function timetracker_invoice_create_action_form($context) {
+  global $user;
+
+  if (!og_get_group_context()) {
+    $options = array('' => t('-- Select group --'));
+    
+    foreach ($user->og_groups as $gid => $group) {
+      $options[$gid] = $group['title'];
+    }
+    
+    $form['og_gids'] = array(
+      '#type' => 'select',
+      '#title' => t('Group'),
+      '#description' => t('Group where to save the invoice'),
+      '#options' => $options,
+      '#required' => TRUE,
+      '#default_value' => @$context['og_gids'],
+    );
+    
+    return $form;
+  }
+}
+
+function timetracker_invoice_create_action_submit($form, $form_state) {
+  if ($og_gids = $form_state['values']['og_gids']) {
+    return compact('og_gids');
+  }
 }
 
 /**
